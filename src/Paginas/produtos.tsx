@@ -1,33 +1,50 @@
 import { useEffect, useState } from "react";
 import api from "../Api/api";
 
-interface Produto {
+interface ProdutoType {
   id: number;
   nome: string;
   categoria: string;
   preco: number;
 }
 
-const user = { role: "admin" }; 
+const user = { tipo: "admin" }; 
 
 export default function Produtos() {
-  const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [busca, setBusca] = useState("");
+    const [produtos, setProdutos] = useState<ProdutoType[]>([]);
 
+    // Estado para o texto de busca
+    const [busca, setBusca] = useState("");
+
+  const [loading, setLoading] = useState(true);
+
+  // Função para carregar e normalizar produtos da API
   const carregarProdutos = async () => {
+    setLoading(true);
     try {
-      const res = await api.get(`/produtos?busca=${busca}`);
-      // Garante que o estado de produtos seja sempre um array para evitar erros de renderização.
-      setProdutos(Array.isArray(res.data) ? res.data : []);
+      const res = await api.get("/produtos");
+      console.log(res.data);
+      const raw = res.data;
+      const normalize = (d: any) => {
+        if (Array.isArray(d)) return d;
+        if (d && Array.isArray(d.produtos)) return d.produtos;
+        if (d && Array.isArray(d.items)) return d.items;
+        return [];
+      };
+      setProdutos(normalize(raw));
     } catch (error) {
-      console.error("Erro ao carregar produtos:", error);
-      setProdutos([]); // Em caso de erro na requisição, garante que a lista fique vazia.
+      console.error('Erro ao buscar produtos:', error);
+      setProdutos([]);
+      // opcional: alert("Erro ao buscar produtos. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     carregarProdutos();
-  }, [busca]);
+  }, []);
+
 
   const adicionarAoCarrinho = async (id: number) => {
     try {
@@ -44,8 +61,7 @@ export default function Produtos() {
     if (window.confirm("Tem certeza que deseja excluir este produto?")) {
       try {
         await api.delete(`/produtos/${id}`);
-        alert("Produto excluído com sucesso!");
-        carregarProdutos(); 
+        alert("Produto excluído com sucesso!"); 
       } catch (error) {
         console.error("Erro ao excluir produto:", error);
         alert("Erro ao excluir produto.");
@@ -53,7 +69,11 @@ export default function Produtos() {
     }
   };
 
-  if (produtos.length === 0) {
+  if (loading) {
+    return <p>Carregando produtos...</p>;
+  }
+
+  if (!loading && produtos.length === 0) {
     return <p>Nenhum produto encontrado.</p>;
   }
 
@@ -80,7 +100,7 @@ export default function Produtos() {
                 Adicionar ao carrinho
               </button>
               
-              {user?.role === "admin" && (
+              {user?.tipo === "admin" && (
                 <button
                   onClick={() => handleDelete(p.id)}
                   className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"

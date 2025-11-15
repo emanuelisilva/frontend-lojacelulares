@@ -12,14 +12,14 @@ interface User {
   name: string;
   email: string;
   senha: string;
-  role: string;
+  tipo: string;
   token: string;
 }
 
 function App() {
-  const user = localStorage.getItem("tipo") ? { role: localStorage.getItem("tipo") } as User : null;
+  const user = localStorage.getItem("tipo") ? { tipo: localStorage.getItem("tipo") } as User : null;
 
-  if (user?.role === "admin") {
+  if (user?.tipo === "admin") {
     return <li><Link to="/admin/usuarios" className="hover:text-gray-300">Admin</Link></li>
   }
   return (
