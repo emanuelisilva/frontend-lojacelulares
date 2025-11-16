@@ -23,6 +23,20 @@ export default function Carrinho() {
       setItens(prev => prev.filter(i => i.idProduto !== idProduto));
     } catch (err) { console.error(err); return err && <p className="text-red-500 bg-red-100 p-2 rounded mb-4">{`${err}`}</p>}
   };
+
+  const limparCarrinho = async () => {
+    if (window.confirm("Tem certeza que deseja excluir TODOS os itens do carrinho?")) {
+      try {
+        await api.delete(`/api/carrinho/${idUsuario}`);
+        setItens([]);
+        alert("Carrinho limpo com sucesso!");
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao limpar carrinho.");
+      }
+    }
+  };
+
   // Calcula o total do carrinho
   const total = itens.reduce((s, it) => s + it.preco * (it.quantidade || 1), 0);
 
@@ -54,6 +68,12 @@ export default function Carrinho() {
           </ul>
           <div className="mt-6 text-right">
             <h3 className="text-xl font-bold">Total: R$ {total.toFixed(2).replace('.', ',')}</h3>
+            <button
+              onClick={limparCarrinho}
+              className="mt-4 bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700 font-semibold"
+            >
+              Limpar Carrinho Inteiro
+            </button>
           </div>
         </div>
       )}
